@@ -119,12 +119,12 @@ class CacheMiddleware {
 		// TODO: figure out if I should homogenize requests by invoking hydrate here
 		// TODO: why does mung not support writeAsync? Consolidate these functions
 		// TODO: why does mung not support send?
-		app.use('*', intercept.jsonAsync((json, req, res) => {
+		app.use('*', intercept.jsonAsync((json, req, res) =>
 			this.cacheSetAsync(req.cacheKey, json)
-		}))
-		app.use('*', intercept.write((buffer, encoding, req, res) => {
+		))
+		app.use('*', intercept.write((buffer, encoding, req, res) =>
 			this.cacheSet(req.cacheKey, buffer)
-		}))
+		))
 	}
 
 	/**
