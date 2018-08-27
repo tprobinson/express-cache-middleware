@@ -21,7 +21,6 @@ A fork of [express-mung](https://github.com/richardschneider/express-mung) to su
 
 [![https://nodei.co/npm/express-cache-middleware.svg?downloads=true&downloadRank=true&stars=true](https://nodei.co/npm/express-cache-middleware.svg?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/express-cache-middleware)
 
-[![npm version](https://badge.fury.io/js/express-cache-middleware.svg)](https://badge.fury.io/js/express-cache-middleware)
 [![Dependency Status](https://david-dm.org/tprobinson/express-cache-middleware.svg)](https://david-dm.org)
 [![Coverage Status](https://coveralls.io/repos/github/tprobinson/express-cache-middleware/badge.svg?branch=master)](https://coveralls.io/github/tprobinson/express-cache-middleware?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/tprobinson/express-cache-middleware/badge.svg?targetFile=package.json)](https://snyk.io/test/github/tprobinson/express-cache-middleware?targetFile=package.json)
