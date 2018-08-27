@@ -1,0 +1,54 @@
+{
+  "name": "express-cache-middleware",
+  "version": "0.4.0",
+  "description": "An Express middleware to cache any endpoints below it using cache-manager",
+  "main": "src/index.js",
+  "keywords": [
+    "express", "middleware",
+    "cache", "caching", "cache-manager",
+    "mung", "munge", "intercept",
+    "transform"
+  ],
+  "repository": "https://github.com/tprobinson/express-cache-middleware.git",
+  "bugs": {
+    "url": "https://github.com/tprobinson/express-cache-middleware.git/issues"
+  },
+  "homepage": "https://github.com/tprobinson/express-cache-middleware#readme",
+  "license": "MIT",
+  "author": {
+    "name": "Trevor Robinson",
+    "url": "https://keybase.io/tpr"
+  },
+  "scripts": {
+    "lint": "eslint src/ test/",
+    "test": "yarn run lint; jest --maxWorkers=4",
+    "test:coveralls": "yarn run test --coverage --coverageReporters=text-lcov | yarn exec coveralls",
+    "doc": "esdoc",
+    "docdev": "esdoc && serve -s docs"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}"
+    ]
+  },
+  "dependencies": {
+    "express-mung": "^0.5.1"
+  },
+  "devDependencies": {
+    "cache-manager": "2.x",
+    "coveralls": "^3.0.2",
+    "eslint": "^5.4.0",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jest": "^21.21.0",
+    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-promise": "^4.0.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "jest": "^23.5.0",
+    "supertest": "^3.1.0"
+  },
+  "peerDependencies": {
+    "cache-manager": "2.x"
+  }
+}
