@@ -10,34 +10,52 @@ jest.spyOn(global.console, 'warn').mockImplementation(fakeConsoleWarn)
 jest.spyOn(global.console, 'error').mockImplementation(fakeConsoleError)
 
 describe('hydrate badly', () => {
-	const testValue = random()
-	const expectedValue = testValue.toUpperCase()
+  const testValue = random()
+  const expectedValue = testValue.toUpperCase()
 
-	const hydrateBadly = (res, data, cb) => {
-		cb(null, data.toUpperCase())
-		cb(null, data.toUpperCase())
-	}
+  const hydrateBadly = (res, data, cb) => {
+    cb(null, data.toUpperCase())
+    cb(null, data.toUpperCase())
+  }
 
-	test('get warned for calling callback twice', done => {
-		let routeResponse = testValue
+  const hydrateRepeatedly = (res, data, cb) => {
+    cb(null, data.toUpperCase())
+    return Promise.resolve(data.toUpperCase())
+  }
 
-		utils.createTestEnvironment({hydrate: hydrateBadly}, (err, env) => {
-			if( err ) { return done(err) }
-			env.app.get('/', (req, res, next) => res.send(routeResponse))
+  test('get warned for calling callback twice', async () => {
+    let routeResponse = testValue
 
-			return utils.get(env.app)
-				.then(response => {
-					expect(response.statusCode).toBe(200)
-					expect(response.text).toEqual(testValue)
-					routeResponse = 'cached'
-					return utils.get(env.app)
-				})
-				.then(response => {
-					expect(response.statusCode).toBe(200)
-					expect(response.text).toEqual(expectedValue)
-					expect(fakeConsoleWarn).toHaveBeenCalled()
-					env.listen.close(done)
-				})
-		})
-	})
+    const env = await utils.createTestEnvironment({hydrate: hydrateBadly})
+    env.app.get('/', (req, res, next) => res.send(routeResponse))
+
+    const firstResponse = await utils.get(env.app)
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.text).toEqual(routeResponse)
+    routeResponse = 'cached'
+
+    const secondResponse = await utils.get(env.app)
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.text).toEqual(expectedValue)
+    expect(fakeConsoleWarn).toHaveBeenCalled()
+    env.listen.close()
+  })
+
+  test('get warned for callbacking and promising', async () => {
+    let routeResponse = testValue
+
+    const env = await utils.createTestEnvironment({hydrate: hydrateRepeatedly})
+    env.app.get('/', (req, res, next) => res.send(routeResponse))
+
+    const firstResponse = await utils.get(env.app)
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.text).toEqual(routeResponse)
+    routeResponse = 'cached'
+
+    const secondResponse = await utils.get(env.app)
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.text).toEqual(expectedValue)
+    expect(fakeConsoleWarn).toHaveBeenCalled()
+    env.listen.close()
+  })
 })

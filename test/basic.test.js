@@ -5,107 +5,93 @@ const cacheManager = require('cache-manager')
 const utils = require('./utils')
 
 describe('class construction options', () => {
-	test('can instantiate class', () => {
-		const cacheMiddleware = new ExpressCache(
-			cacheManager.caching(utils.memoryCacheParams)
-		)
-		expect(cacheMiddleware).toEqual(expect.any(ExpressCache))
-	})
+  test('can instantiate class', () => {
+    const cacheMiddleware = new ExpressCache(
+      cacheManager.caching(utils.memoryCacheParams)
+    )
+    expect(cacheMiddleware).toEqual(expect.any(ExpressCache))
+  })
 
-	test('can add options to constructor', () => {
-		const getCacheKeyFunc = req => req.url
-		const cacheMiddleware = new ExpressCache(
-			cacheManager.caching(utils.memoryCacheParams), {
-				getCacheKey: getCacheKeyFunc
-			}
-		)
-		expect(cacheMiddleware).toEqual(expect.any(ExpressCache))
-		expect(cacheMiddleware).toHaveProperty('options.getCacheKey', getCacheKeyFunc)
-	})
+  test('can add options to constructor', () => {
+    const getCacheKeyFunc = req => req.url
+    const cacheMiddleware = new ExpressCache(
+      cacheManager.caching(utils.memoryCacheParams), {
+        getCacheKey: getCacheKeyFunc
+      }
+    )
+    expect(cacheMiddleware).toEqual(expect.any(ExpressCache))
+    expect(cacheMiddleware).toHaveProperty('options.getCacheKey', getCacheKeyFunc)
+  })
 
-	test('construction fails without required parameters', () => {
-		expect(() => new ExpressCache()).toThrow()
-	})
+  test('construction fails without required parameters', () => {
+    expect(() => new ExpressCache()).toThrow()
+  })
 
-	test('construction fails with incorrect parameters', () => {
-		expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), {getCacheKey: true})).toThrow()
-		expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), {hydrate: true})).toThrow()
-	})
+  test('construction fails with incorrect parameters', () => {
+    expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), {getCacheKey: true})).toThrow()
+    expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), {hydrate: true})).toThrow()
+  })
 })
 
 describe('basic function test', () => {
-	const testValue = random()
+  const testValue = random()
 
-	const testUnicodeValue = '関係なく　文字。'
+  const testUnicodeValue = '関係なく　文字。'
 
-	// One-pixel transparent GIF
-	const testBinaryValue = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
+  // One-pixel transparent GIF
+  const testBinaryValue = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
 
-	let env
-	let lastRouteResponse
-	let routeResponse
-	beforeAll(done => utils.createTestEnvironment({}, (err, stuff) => {
-		if( err ) { return done(err) }
-		env = stuff
-		env.app.get('/', (req, res, next) => {
-			res.send(routeResponse)
-			lastRouteResponse = routeResponse
-		})
-		done()
-	}))
+  let env
+  let lastRouteResponse
+  let routeResponse
+  beforeAll(async () => {
+    env = await utils.createTestEnvironment()
+    env.app.get('/', (req, res, next) => {
+      res.send(routeResponse)
+      lastRouteResponse = routeResponse
+    })
+  })
 
-	afterEach(done => {
-		env.cacheMiddleware.reset(done)
-	})
-	afterAll(done => {
-		env.listen.close(done)
-	})
+  afterEach(done => {
+    env.cacheMiddleware.reset(done)
+  })
+  afterAll(done => {
+    env.listen.close(done)
+  })
 
-	test('string response', done => {
-		routeResponse = testValue
-		return utils.get(env.app)
-			.then(response => {
-				expect(response.statusCode).toBe(200)
-				expect(response.text).toEqual(routeResponse)
-				routeResponse = 'cached'
-				return utils.get(env.app)
-			})
-			.then(response => {
-				expect(response.statusCode).toBe(200)
-				expect(response.text).toEqual(lastRouteResponse)
-				done()
-			})
-	})
+  test('string response', async () => {
+    routeResponse = testValue
+    const firstResponse = await utils.get(env.app)
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.text).toEqual(routeResponse)
+    routeResponse = 'cached'
 
-	test('unicode string safety', done => {
-		routeResponse = testUnicodeValue
-		return utils.get(env.app)
-			.then(response => {
-				expect(response.statusCode).toBe(200)
-				expect(response.text).toEqual(routeResponse)
-				routeResponse = 'cached'
-				return utils.get(env.app)
-			})
-			.then(response => {
-				expect(response.statusCode).toBe(200)
-				expect(response.text).toEqual(lastRouteResponse)
-				done()
-			})
-	})
+    const secondResponse = await utils.get(env.app)
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.text).toEqual(lastRouteResponse)
+  })
 
-	test('binary data safety', done => {
-		routeResponse = testBinaryValue
-		return utils.getAsBinary(env.app)
-			.then(response => {
-				expect(response.statusCode).toBe(200)
-				expect(response.body).toEqual(routeResponse)
-				routeResponse = 'cached'
-				return utils.getAsBinary(env.app)
-			})
-			.then(response => {
-				expect(response.statusCode).toBe(200)
-				expect(response.body).toEqual(lastRouteResponse)
-				done()
-			})
-	})
+  test('unicode string safety', async () => {
+    routeResponse = testUnicodeValue
+    const firstResponse = await utils.get(env.app)
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.text).toEqual(routeResponse)
+    routeResponse = 'cached'
+
+    const secondResponse = await utils.get(env.app)
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.text).toEqual(lastRouteResponse)
+  })
+
+  test('binary data safety', async () => {
+    routeResponse = testBinaryValue
+    const firstResponse = await utils.getAsBinary(env.app)
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.body).toEqual(routeResponse)
+    routeResponse = 'cached'
+
+    const secondResponse = await utils.getAsBinary(env.app)
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.body).toEqual(lastRouteResponse)
+  })
 })

@@ -1,8 +1,6 @@
 module.exports = {
     extends: ["standard", "plugin:jest/recommended"],
     rules: {
-      "indent": ["error", "tab"],
-      "no-tabs": ["off"],
       "keyword-spacing": ["error", {
         "before": true, "after": true, "overrides": {
           "if": { "after": false },
