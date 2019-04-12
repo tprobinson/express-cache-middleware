@@ -6,12 +6,12 @@ describe('hydration test', () => {
   const testValue = random()
   const hydratedValue = testValue.toUpperCase()
 
-  const hydrate = (res, data, cb) => {
+  const hydrate = (req, res, data, cb) => {
     cb(null, data.toUpperCase())
   }
 
   const hydrateWithPromise = util.promisify(hydrate)
-  const hydrateToJson = async (res, data) => JSON.parse(data)
+  const hydrateToJson = async (req, res, data) => JSON.parse(data)
 
   test('hydrate with callback', async () => {
     const app = await utils.sendOnce(testValue, { hydrate: hydrate })

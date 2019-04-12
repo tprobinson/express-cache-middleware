@@ -10,12 +10,12 @@ jest.spyOn(global.console, 'warn').mockImplementation(fakeConsoleWarn)
 // jest.spyOn(global.console, 'error').mockImplementation(fakeConsoleError)
 
 describe('hydrate badly', () => {
-  const hydrateBadly = (res, data, cb) => {
+  const hydrateBadly = (req, res, data, cb) => {
     cb(null, data.toUpperCase())
     cb(null, data.toUpperCase())
   }
 
-  const hydrateRepeatedly = (res, data, cb) => {
+  const hydrateRepeatedly = (req, res, data, cb) => {
     cb(null, data.toUpperCase())
     return Promise.resolve(data.toUpperCase())
   }

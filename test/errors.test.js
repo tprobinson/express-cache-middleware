@@ -2,11 +2,11 @@ const random = require('random-words')
 const utils = require('./utils')
 
 describe('hydration errors', () => {
-  const hydrateWithError = (res, data, cb) => {
+  const hydrateWithError = (req, res, data, cb) => {
     cb(new Error(data.toUpperCase()))
   }
 
-  const hydrateWithErrorPromise = async (res, data) => {
+  const hydrateWithErrorPromise = async (req, res, data) => {
     throw new Error(data.toUpperCase())
   }
 

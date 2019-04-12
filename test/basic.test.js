@@ -34,8 +34,6 @@ describe('class construction options', () => {
 })
 
 describe('basic function test', () => {
-  const hydrateToJson = async (res, data) => JSON.parse(data)
-
   test('backend using send()', async () => {
     const testValue = random()
     const app = await utils.sendOnce(testValue)
@@ -64,7 +62,7 @@ describe('basic function test', () => {
 
   test('backend using json()', async () => {
     const testValue = random()
-    const app = await utils.jsonOnce(testValue, { hydrate: hydrateToJson })
+    const app = await utils.jsonOnce(testValue, { hydrate: async (req, res, data) => JSON.parse(data) })
     const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
     expect(firstResponse.body).toHaveProperty('message', testValue)

@@ -32,7 +32,7 @@ function passthroughUrl(req) {
  * @param  {Buffer|string}   data The data returned from cache
  * @return {[Promise]}            Alternative to calling callback, return a Promise
  */
-async function passthroughResponse(res, data) {
+async function passthroughResponse(req, res, data) {
   return data
 }
 
