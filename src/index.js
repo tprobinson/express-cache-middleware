@@ -1,3 +1,4 @@
+const util = require('util')
 const intercept = require('express-mung')
 
 /**
@@ -42,7 +43,7 @@ async function passthroughResponse(res, data) {
  * @param  {Function}        hydrate  Function to invoke on data
  * @return {[Promise]}
  */
-function hydrateHandler(res, data, hydrate) {
+function hydrateHandler(req, res, data, hydrate) {
   return new Promise((resolve, reject) => {
     let finishCalled = false
     const finish = (err, result) => {
@@ -55,7 +56,7 @@ function hydrateHandler(res, data, hydrate) {
       resolve(result)
     }
 
-    const hydratePromise = hydrate(res, data, finish)
+    const hydratePromise = hydrate(req, res, data, finish)
     if( hydratePromise instanceof Promise ) {
       hydratePromise.then(result => finish(null, result), err => finish(err))
     }
@@ -100,6 +101,7 @@ class CacheMiddleware {
     ['get', 'set', 'mget', 'mset', 'del', 'setex', 'reset', 'keys', 'ttl'].forEach(op => {
       if( op in this.cache ) {
         this[op] = this.cache[op]
+        this[`${op}Async`] = util.promisify(this.cache[op])
       }
     })
   }
@@ -112,19 +114,13 @@ class CacheMiddleware {
    */
   attach(app) {
     // Intercept request to get from cache if possible
-    app.use('*', this.cacheRoute.bind(this))
+    app.use(this.cacheRoute.bind(this))
 
     // Any requests after this will be stored in cache.
     // TODO: figure out if I should homogenize requests by invoking hydrate here
-    // TODO: why does mung not support writeAsync? Consolidate these functions
-    // TODO: why does mung not support send?
-    app.use('*', intercept.jsonAsync((json, req, res) => {
-      return this.cacheSet(req.cacheKey, json)
-    }))
-    app.use('*', intercept.writeAsync((buffer, encoding, req, res) => {
-      // Do not return the promise, this breaks mung?
-      return this.cacheSet(req.cacheKey, buffer)
-    }))
+    app.use(intercept.json((json, req, res) => this.cacheSet(req.cacheKey, json)))
+    app.use(intercept.write((buffer, encoding, req, res) => this.cacheSet(req.cacheKey, buffer)))
+    app.use(intercept.send((chunk, req, res) => this.cacheSet(req.cacheKey, chunk)))
   }
 
   /**
@@ -140,7 +136,7 @@ class CacheMiddleware {
       const result = await this.cacheGet(cacheKey)
       if( result ) {
         // If returning from cache, all we have is the raw data. Hydrate it.
-        const hydratedData = await hydrateHandler(res, result, this.options.hydrate)
+        const hydratedData = await hydrateHandler(req, res, result, this.options.hydrate)
         res.send(hydratedData)
         return
       }
@@ -156,10 +152,9 @@ class CacheMiddleware {
    * @param  {Function} cb  Callback to invoke when complete
    * @return {Promise}
    */
-  cacheGet(key) {
-    return new Promise((resolve, reject) => {
-      this.get(key, (err, value) => err ? reject(err) : resolve(value))
-    })
+  async cacheGet(key) {
+    const value = await this.getAsync(key)
+    return value
   }
 
   /**
@@ -169,9 +164,8 @@ class CacheMiddleware {
    * @return {Promise}
    */
   cacheSet(key, value) {
-    return new Promise((resolve, reject) => {
-      this.set(key, value, err => err ? reject(err) : resolve(value))
-    })
+    this.set(key, value)
+    return value
   }
 }
 

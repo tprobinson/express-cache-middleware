@@ -2,9 +2,6 @@ const random = require('random-words')
 const utils = require('./utils')
 
 describe('hydration errors', () => {
-  const testValue = random()
-  const expectedValue = testValue.toUpperCase()
-
   const hydrateWithError = (res, data, cb) => {
     cb(new Error(data.toUpperCase()))
   }
@@ -14,62 +11,49 @@ describe('hydration errors', () => {
   }
 
   test('hydrate with error with callback', async () => {
-    let routeResponse = testValue
+    const testValue = random()
+    const expectedValue = testValue.toUpperCase()
 
-    const env = await utils.createTestEnvironment({hydrate: hydrateWithError})
-    env.app.get('/', (req, res, next) => res.send(routeResponse))
-
-    const firstResponse = await utils.get(env.app)
+    const app = await utils.sendOnce(testValue, {hydrate: hydrateWithError})
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await app.get()
     expect(secondResponse.statusCode).toBe(500)
     expect(secondResponse.text).toMatch(`Error: ${expectedValue}`)
-    env.listen.close()
+    await app.close()
   })
 
   test('hydrate with error with promise', async () => {
-    let routeResponse = testValue
+    const testValue = random()
+    const expectedValue = testValue.toUpperCase()
 
-    const env = await utils.createTestEnvironment({hydrate: hydrateWithErrorPromise})
-    env.app.get('/', (req, res, next) => res.send(routeResponse))
-
-    const firstResponse = await utils.get(env.app)
+    const app = await utils.sendOnce(testValue, {hydrate: hydrateWithErrorPromise})
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await app.get()
     expect(secondResponse.statusCode).toBe(500)
     expect(secondResponse.text).toMatch(`Error: ${expectedValue}`)
-    env.listen.close()
+    await app.close()
   })
 })
 
 describe('bad cache-manager backend test', () => {
   test('Errors when cache-manager cannot get', async () => {
-    const env = await utils.createBogusGetEnvironment()
-    env.app.get('/', (req, res, next) => {
-      res.send('never seen')
-    })
-
-    const firstResponse = await utils.get(env.app)
+    const app = await utils.createBrokenGetEnvironment()
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(500)
     expect(firstResponse.text).toMatch('Error: Backend get error')
-    env.listen.close()
+    await app.close()
   })
-
   test('Errors when cache-manager cannot set', async () => {
-    const env = await utils.createBogusSetEnvironment()
-    env.app.get('/', (req, res, next) => {
-      res.send('never seen')
-    })
-
-    const firstResponse = await utils.get(env.app)
+    const app = await utils.createBrokenSetEnvironment()
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(500)
     expect(firstResponse.text).toMatch('Backend set error')
-    env.listen.close()
+    await app.close()
   })
 })

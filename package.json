@@ -1,7 +1,7 @@
 {
   "name": "express-cache-middleware",
-  "version": "0.4.0",
-  "description": "An Express middleware to cache any endpoints below it using cache-manager",
+  "version": "1.0.0",
+  "description": "An Express middleware designed to intercept responses and cache them.",
   "main": "src/index.js",
   "keywords": [
     "express",
@@ -26,7 +26,7 @@
   },
   "scripts": {
     "lint": "eslint src/ test/",
-    "test": "yarn run lint; jest --maxWorkers=4",
+    "test": "yarn run lint && jest --maxWorkers=4",
     "test:coveralls": "yarn run test --coverage --coverageReporters=text-lcov | yarn exec coveralls",
     "doc": "esdoc",
     "docdev": "esdoc && serve -s docs"
@@ -38,7 +38,7 @@
     ]
   },
   "dependencies": {
-    "express-mung": "git+https://github.com/tprobinson/express-mung"
+    "express-mung": "git+https://github.com/tprobinson/express-mung#sendFork"
   },
   "devDependencies": {
     "cache-manager": "2.x",

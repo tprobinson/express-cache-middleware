@@ -1,50 +1,55 @@
 const random = require('random-words')
+const util = require('util')
 const utils = require('./utils')
 
 describe('hydration test', () => {
   const testValue = random()
-  const expectedValue = testValue.toUpperCase()
+  const hydratedValue = testValue.toUpperCase()
 
   const hydrate = (res, data, cb) => {
     cb(null, data.toUpperCase())
   }
 
-  const hydrateWithPromise = (res, data) =>
-    new Promise((resolve, reject) =>
-      hydrate(res, data, (err, data) => err ? reject(err) : resolve(data))
-    )
+  const hydrateWithPromise = util.promisify(hydrate)
+  const hydrateToJson = async (res, data) => JSON.parse(data)
 
   test('hydrate with callback', async () => {
-    let routeResponse = testValue
+    const app = await utils.sendOnce(testValue, { hydrate: hydrate })
 
-    const env = await utils.createTestEnvironment({hydrate: hydrate})
-    env.app.get('/', (req, res, next) => res.send(routeResponse))
-
-    const firstResponse = await utils.get(env.app)
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await app.get()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.text).toEqual(expectedValue)
-    env.listen.close()
+    expect(secondResponse.text).toEqual(hydratedValue)
+    await app.close()
   })
 
   test('hydrate with promise', async () => {
-    let routeResponse = testValue
+    const app = await utils.sendOnce(testValue, { hydrate: hydrateWithPromise })
 
-    const env = await utils.createTestEnvironment({hydrate: hydrateWithPromise})
-    env.app.get('/', (req, res, next) => res.send(routeResponse))
-
-    const firstResponse = await utils.get(env.app)
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await app.get()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.text).toEqual(expectedValue)
-    env.listen.close()
+    expect(secondResponse.text).toEqual(hydratedValue)
+    await app.close()
+  })
+
+  test('hydrate as JSON', async () => {
+    const data = {[`${random()}`]: random()}
+    const app = await utils.sendOnce(data, { hydrate: hydrateToJson })
+
+    const firstResponse = await app.get()
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.body).toEqual(data)
+
+    const secondResponse = await app.get()
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.body).toEqual(data)
+    await app.close()
   })
 })

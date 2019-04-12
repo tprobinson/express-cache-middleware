@@ -34,64 +34,73 @@ describe('class construction options', () => {
 })
 
 describe('basic function test', () => {
-  const testValue = random()
+  const hydrateToJson = async (res, data) => JSON.parse(data)
 
-  const testUnicodeValue = '関係なく　文字。'
-
-  // One-pixel transparent GIF
-  const testBinaryValue = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
-
-  let env
-  let lastRouteResponse
-  let routeResponse
-  beforeAll(async () => {
-    env = await utils.createTestEnvironment()
-    env.app.get('/', (req, res, next) => {
-      res.send(routeResponse)
-      lastRouteResponse = routeResponse
-    })
-  })
-
-  afterEach(done => {
-    env.cacheMiddleware.reset(done)
-  })
-  afterAll(done => {
-    env.listen.close(done)
-  })
-
-  test('string response', async () => {
-    routeResponse = testValue
-    const firstResponse = await utils.get(env.app)
+  test('backend using send()', async () => {
+    const testValue = random()
+    const app = await utils.sendOnce(testValue)
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await app.get()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.text).toEqual(lastRouteResponse)
+    expect(secondResponse.text).toEqual(testValue)
+    await app.close()
+  })
+
+  test('backend using write()', async () => {
+    const testValue = random()
+    const app = await utils.writeOnce(testValue)
+    const firstResponse = await app.get()
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.text).toEqual(testValue)
+
+    const secondResponse = await app.get()
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.text).toEqual(testValue)
+    await app.close()
+  })
+
+  test('backend using json()', async () => {
+    const testValue = random()
+    const app = await utils.jsonOnce(testValue, { hydrate: hydrateToJson })
+    const firstResponse = await app.get()
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.body).toHaveProperty('message', testValue)
+
+    const secondResponse = await app.get()
+    expect(secondResponse.statusCode).toBe(200)
+    expect(secondResponse.body).toHaveProperty('message', testValue)
+    await app.close()
   })
 
   test('unicode string safety', async () => {
-    routeResponse = testUnicodeValue
-    const firstResponse = await utils.get(env.app)
+    const testUnicodeValue = '関係なく　文字。'
+    const app = await utils.sendOnce(testUnicodeValue)
+    const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testUnicodeValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await app.get()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.text).toEqual(lastRouteResponse)
+    expect(secondResponse.text).toEqual(testUnicodeValue)
+    await app.close()
   })
 
   test('binary data safety', async () => {
-    routeResponse = testBinaryValue
-    const firstResponse = await utils.getAsBinary(env.app)
-    expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.body).toEqual(routeResponse)
-    routeResponse = 'cached'
+    // One-pixel transparent GIF
+    const testBinaryValue = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64')
 
-    const secondResponse = await utils.getAsBinary(env.app)
+    const app = await utils.sendOnce(testBinaryValue)
+
+    const firstResponse = await app.getAsBinary()
+    expect(firstResponse.statusCode).toBe(200)
+    expect(firstResponse.body).toEqual(testBinaryValue)
+
+    const secondResponse = await app.getAsBinary()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.body).toEqual(lastRouteResponse)
+    expect(secondResponse.body).toEqual(testBinaryValue)
+    await app.close()
   })
 })

@@ -1141,9 +1141,9 @@ expect@^23.5.0:
     jest-message-util "^23.4.0"
     jest-regex-util "^23.3.0"
 
-"express-mung@git+https://github.com/tprobinson/express-mung":
+"express-mung@git+https://github.com/tprobinson/express-mung#sendFork":
   version "0.5.1"
-  resolved "git+https://github.com/tprobinson/express-mung#62849f35d7634e839b54f353c1eb0850b5b05ad3"
+  resolved "git+https://github.com/tprobinson/express-mung#64ebd60cc4b5814ac05ea640dfd230c8df6f3527"
 
 express@^4.16.3:
   version "4.16.3"

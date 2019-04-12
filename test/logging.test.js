@@ -2,17 +2,14 @@ const random = require('random-words')
 const utils = require('./utils')
 
 // Mock console funcs
-const fakeConsoleLog = jest.fn()
+// const fakeConsoleLog = jest.fn()
 const fakeConsoleWarn = jest.fn()
-const fakeConsoleError = jest.fn()
-jest.spyOn(global.console, 'log').mockImplementation(fakeConsoleLog)
+// const fakeConsoleError = jest.fn()
+// jest.spyOn(global.console, 'log').mockImplementation(fakeConsoleLog)
 jest.spyOn(global.console, 'warn').mockImplementation(fakeConsoleWarn)
-jest.spyOn(global.console, 'error').mockImplementation(fakeConsoleError)
+// jest.spyOn(global.console, 'error').mockImplementation(fakeConsoleError)
 
 describe('hydrate badly', () => {
-  const testValue = random()
-  const expectedValue = testValue.toUpperCase()
-
   const hydrateBadly = (res, data, cb) => {
     cb(null, data.toUpperCase())
     cb(null, data.toUpperCase())
@@ -24,38 +21,34 @@ describe('hydrate badly', () => {
   }
 
   test('get warned for calling callback twice', async () => {
-    let routeResponse = testValue
+    const testValue = random()
+    const hydratedValue = testValue.toUpperCase()
 
-    const env = await utils.createTestEnvironment({hydrate: hydrateBadly})
-    env.app.get('/', (req, res, next) => res.send(routeResponse))
-
-    const firstResponse = await utils.get(env.app)
+    const env = await utils.sendOnce(testValue, {hydrate: hydrateBadly})
+    const firstResponse = await env.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await env.get()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.text).toEqual(expectedValue)
+    expect(secondResponse.text).toEqual(hydratedValue)
     expect(fakeConsoleWarn).toHaveBeenCalled()
-    env.listen.close()
+    await env.close()
   })
 
   test('get warned for callbacking and promising', async () => {
-    let routeResponse = testValue
+    const testValue = random()
+    const hydratedValue = testValue.toUpperCase()
 
-    const env = await utils.createTestEnvironment({hydrate: hydrateRepeatedly})
-    env.app.get('/', (req, res, next) => res.send(routeResponse))
-
-    const firstResponse = await utils.get(env.app)
+    const env = await utils.sendOnce(testValue, {hydrate: hydrateRepeatedly})
+    const firstResponse = await env.get()
     expect(firstResponse.statusCode).toBe(200)
-    expect(firstResponse.text).toEqual(routeResponse)
-    routeResponse = 'cached'
+    expect(firstResponse.text).toEqual(testValue)
 
-    const secondResponse = await utils.get(env.app)
+    const secondResponse = await env.get()
     expect(secondResponse.statusCode).toBe(200)
-    expect(secondResponse.text).toEqual(expectedValue)
+    expect(secondResponse.text).toEqual(hydratedValue)
     expect(fakeConsoleWarn).toHaveBeenCalled()
-    env.listen.close()
+    await env.close()
   })
 })

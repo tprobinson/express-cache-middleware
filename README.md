@@ -1,6 +1,6 @@
 # express-cache-middleware
 
-A middleware designed to intercept responses and cache them.
+An Express middleware designed to intercept responses and cache them.
 
 <!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
@@ -11,13 +11,6 @@ A middleware designed to intercept responses and cache them.
       - [hydrate](#hydrate)   
 
 <!-- /MDTOC -->
-
-**Work in Progress**
-
-This module is not complete yet. It will not intercept any responses that are not sent with `res.write()`, `res.send()`, or `res.json()`.
-
-A fork of [express-mung](https://github.com/richardschneider/express-mung) to support `res.send()` has been used from  [here](https://github.com/tprobinson/express-mung).
-
 
 [![https://nodei.co/npm/express-cache-middleware.svg?downloads=true&downloadRank=true&stars=true](https://nodei.co/npm/express-cache-middleware.svg?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/express-cache-middleware)
 
@@ -66,9 +59,11 @@ Please see the options for important information about handling incoming and out
 
 ### getCacheKey
 
-A function to get the cache key from the request. Provided with one argument: the request object from Express. Return the cache key as a string.
+A function to get the cache key from the request. Provided with one argument: the request object from Express.
 
-By default, this is a function that just passes the request URL through.
+By default, this is a function that returns the request URL.
+
+You may want to customize this function if you anticipate that there are things in your URL that you don't want in your cache key. For example, you can remove irrelevant query parameters or subdirectories by parsing the URL here and returning the cache key.
 
 ### hydrate
 
@@ -76,7 +71,14 @@ Because this middleware is backend-agnostic, it makes no assumptions about what 
 
 This usually ends up as a response with `Content-Type: application/octet-stream`, which is not often what people want. To fix this, `hydrate` is run before the content is returned.
 
-`hydrate` is called with three arguments. The first is the Express response object, the second is what was returned from cache, and the third is a callback. Set any headers or perform any transformations on the returned data. Then, call the callback with (err, result) or return a Promise.
+`hydrate` is called with four arguments:
+
+* `req`, the Express request object
+* `res`, the Express response object
+* `data`. the data returned from cache
+* `cb`, an optional callback function
+
+Set any headers or perform any transformations on the returned data. Then, call the callback with `(err, result)` or return a Promise.
 
 **Note:** `hydrate` is not called for the first response, where your route returns its original content-- only for cache hits.
 
@@ -87,7 +89,7 @@ const cacheMiddleware = new ExpressCache(
 	cacheManager.caching({
 		store: 'memory', max: 10000, ttl: 3600
 	}), {
-		hydrate: (res, data, cb) => {
+		hydrate: (req, res, data, cb) => {
 			// Use file-type library to guess MIME type from Buffer.
 			const guess = fileType(data.slice(0, 4101))
 			if( guess ) {
@@ -100,7 +102,12 @@ const cacheMiddleware = new ExpressCache(
 )
 
 // or with Promises:
-hydrate: (res, data) => {
+const hydrateWithPromise = (res, data) => {
 	return Promise.resolve(data)
+}
+
+// or with async/await:
+const hydrateAsync = async (res, data) => {
+	return data
 }
 ```
