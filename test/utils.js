@@ -28,7 +28,7 @@ module.exports = {
 
     const app = express()
     cacheMiddleware.attach(app)
-    const listen = app.listen(() => resolve({app, cacheMiddleware, listen}))
+    const listen = app.listen(() => resolve({ app, cacheMiddleware, listen }))
   }),
 
   serveOnce: async function(serveFunc, content, options = {}) {
@@ -79,7 +79,7 @@ module.exports = {
   jsonOnce: async function(content, options = {}) {
     let routeResponse = content
     const app = await this.serveOnce((req, res, next) => {
-      res.json({message: routeResponse})
+      res.json({ message: routeResponse })
       routeResponse = 'should not see this value'
     }, content, options)
     return app

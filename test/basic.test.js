@@ -28,8 +28,8 @@ describe('class construction options', () => {
   })
 
   test('construction fails with incorrect parameters', () => {
-    expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), {getCacheKey: true})).toThrow()
-    expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), {hydrate: true})).toThrow()
+    expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), { getCacheKey: true })).toThrow()
+    expect(() => new ExpressCache(cacheManager.caching(utils.memoryCacheParams), { hydrate: true })).toThrow()
   })
 })
 

@@ -24,7 +24,7 @@ describe('hydrate badly', () => {
     const testValue = random()
     const hydratedValue = testValue.toUpperCase()
 
-    const env = await utils.sendOnce(testValue, {hydrate: hydrateBadly})
+    const env = await utils.sendOnce(testValue, { hydrate: hydrateBadly })
     const firstResponse = await env.get()
     expect(firstResponse.statusCode).toBe(200)
     expect(firstResponse.text).toEqual(testValue)
@@ -40,7 +40,7 @@ describe('hydrate badly', () => {
     const testValue = random()
     const hydratedValue = testValue.toUpperCase()
 
-    const env = await utils.sendOnce(testValue, {hydrate: hydrateRepeatedly})
+    const env = await utils.sendOnce(testValue, { hydrate: hydrateRepeatedly })
     const firstResponse = await env.get()
     expect(firstResponse.statusCode).toBe(200)
     expect(firstResponse.text).toEqual(testValue)

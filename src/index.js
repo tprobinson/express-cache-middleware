@@ -57,7 +57,7 @@ function hydrateHandler(req, res, data, hydrate) {
     }
 
     const hydratePromise = hydrate(req, res, data, finish)
-    if( hydratePromise instanceof Promise ) {
+    if( typeof hydratePromise.then === 'function' ) {
       hydratePromise.then(result => finish(null, result), err => finish(err))
     }
   })
@@ -118,7 +118,8 @@ class CacheMiddleware {
 
     // Any requests after this will be stored in cache.
     // TODO: figure out if I should homogenize requests by invoking hydrate here
-    app.use(intercept.json((json, req, res) => this.cacheSet(req.cacheKey, json)))
+    // app.use(intercept.json((json, req, res) => this.cacheSet(req.cacheKey, json)))
+    // json is not needed since it invokes send on its own.
     app.use(intercept.write((buffer, encoding, req, res) => this.cacheSet(req.cacheKey, buffer)))
     app.use(intercept.send((chunk, req, res) => this.cacheSet(req.cacheKey, chunk)))
   }

@@ -2,15 +2,15 @@
 
 An Express middleware designed to intercept responses and cache them.
 
-<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+<!-- TOC START min:1 max:3 link:true asterisk:false update:true -->
+- [express-cache-middleware](#express-cache-middleware)
+- [Usage](#usage)
+  - [Options](#options)
+    - [getCacheKey](#getcachekey)
+    - [hydrate](#hydrate)
+- [Changelog](#changelog)
+<!-- TOC END -->
 
-- [express-cache-middleware](#express-cache-middleware)   
-- [Usage](#Usage)   
-   - [Options](#Options)   
-      - [getCacheKey](#getCacheKey)   
-      - [hydrate](#hydrate)   
-
-<!-- /MDTOC -->
 
 [![https://nodei.co/npm/express-cache-middleware.svg?downloads=true&downloadRank=true&stars=true](https://nodei.co/npm/express-cache-middleware.svg?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/express-cache-middleware)
 
@@ -111,3 +111,33 @@ const hydrateAsync = async (res, data) => {
 	return data
 }
 ```
+
+Example for handling mixed content responses:
+```js
+const hydrateManyThings = async (req, res, data) => {
+  // Parse as JSON first
+  try {
+    JSON.parse(data)
+    res.contentType('application/json')
+    return data
+  } catch ( err ) {}
+
+  const guess = fileType(data.slice(0, 4101))
+  if( guess ) {
+    res.contentType(guess.mime)
+  }
+  return data
+}
+
+```
+
+# Changelog
+
+*1.0.1*
+Removes mung's json as it was setting cache multiple times. `send` will catch json as well.
+Alters Promise detection from `hydrate` functions-- `async` was not being detected as Promises.
+Updated dev dependencies, added babel-jest-assertions to ensure the tests are running properly, and minor linting
+
+
+*1.0.0*
+First full release, using fork of express-mung

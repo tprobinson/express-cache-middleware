@@ -14,7 +14,7 @@ describe('hydration errors', () => {
     const testValue = random()
     const expectedValue = testValue.toUpperCase()
 
-    const app = await utils.sendOnce(testValue, {hydrate: hydrateWithError})
+    const app = await utils.sendOnce(testValue, { hydrate: hydrateWithError })
     const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
     expect(firstResponse.text).toEqual(testValue)
@@ -29,7 +29,7 @@ describe('hydration errors', () => {
     const testValue = random()
     const expectedValue = testValue.toUpperCase()
 
-    const app = await utils.sendOnce(testValue, {hydrate: hydrateWithErrorPromise})
+    const app = await utils.sendOnce(testValue, { hydrate: hydrateWithErrorPromise })
     const firstResponse = await app.get()
     expect(firstResponse.statusCode).toBe(200)
     expect(firstResponse.text).toEqual(testValue)
